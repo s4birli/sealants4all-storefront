@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
+import Image from "next/image";
 import { Check, ShoppingCart } from "lucide-react";
 import { PRODUCT_BY_SKU } from "@/lib/data/products";
 import { plain2, tierForQty } from "@/lib/fmt";
@@ -189,11 +190,22 @@ export function CartDrawer() {
             return (
               <div key={it.sku} className="cart-line">
                 <div className="thumb">
-                  <Placeholder
-                    ratio="1 / 1"
-                    cap={p.brand.split(" ")[0]}
-                    style={{ position: "absolute", inset: 0 }}
-                  />
+                  {p.image ? (
+                    <Image
+                      src={p.image}
+                      alt={p.name}
+                      fill
+                      sizes="72px"
+                      style={{ objectFit: "contain", padding: 4 }}
+                      unoptimized={p.image.endsWith(".webp")}
+                    />
+                  ) : (
+                    <Placeholder
+                      ratio="1 / 1"
+                      cap={p.brand.split(" ")[0]}
+                      style={{ position: "absolute", inset: 0 }}
+                    />
+                  )}
                 </div>
                 <div>
                   <div

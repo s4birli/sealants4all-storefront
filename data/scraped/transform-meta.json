@@ -1,0 +1,20 @@
+{
+  "transformedAt": "2026-05-28T13:20:03.440Z",
+  "productsTotal": 207,
+  "productsWithPrice": 178,
+  "productsOnSale": 7,
+  "categoriesTotal": 41,
+  "bestSku": 12,
+  "newSku": 12,
+  "dealsSku": 7,
+  "brandCounts": {
+    "SIKA": 48,
+    "FISCHER": 39,
+    "SOUDAL": 23,
+    "TEROSON": 10,
+    "TERRACO": 38,
+    "EVERBUILD": 3,
+    "S4ALL PRO": 15,
+    "UNBRANDED": 31
+  }
+}

@@ -9,6 +9,16 @@ const withSerwist = withSerwistInit({
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "sealants4all.co.uk",
+        pathname: "/wp-content/uploads/**",
+      },
+    ],
+    formats: ["image/webp"],
+  },
 };
 
 export default withSerwist(nextConfig);

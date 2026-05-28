@@ -1,16 +1,5 @@
 export type Tier = { min: number; price: number };
 
-export type Product = {
-  sku: string;
-  num: string;
-  name: string;
-  brand: BrandName;
-  use: string;
-  from: number;
-  tiers: Tier[];
-  cap: string;
-};
-
 export type BrandName =
   | "SIKA"
   | "FISCHER"
@@ -18,19 +7,45 @@ export type BrandName =
   | "TEROSON"
   | "TERRACO"
   | "EVERBUILD"
-  | "S4ALL PRO";
+  | "S4ALL PRO"
+  | "UNBRANDED";
+
+export type StockState = "in" | "low" | "out";
+
+export type ProductCategoryRef = { id: string; name: string };
+
+export type Product = {
+  id: number;
+  sku: string;
+  slug: string;
+  num: string;
+  name: string;
+  brand: BrandName;
+  use: string;
+  permalink: string;
+  image: string | null;
+  images: string[];
+  description: string;
+  shortDescription: string;
+  price: number;
+  regularPrice: number;
+  salePrice: number | null;
+  onSale: boolean;
+  priceAvailable: boolean;
+  stock: StockState;
+  lowStockRemaining: number | null;
+  rating: number;
+  reviews: number;
+  categories: ProductCategoryRef[];
+  curatedCategory: string | null;
+  tiers: Tier[];
+  cap: string;
+};
 
 export type Brand = {
   id: string;
   name: BrandName;
   blurb: string;
-};
-
-export type ProductMeta = {
-  rating: number;
-  reviews: number;
-  stock: number;
-  saving: number;
 };
 
 export type CategoryIconKey =
@@ -48,6 +63,16 @@ export type Category = {
   name: string;
   count: number;
   icon: CategoryIconKey;
+};
+
+export type CategoryFull = {
+  id: string;
+  name: string;
+  slug: string;
+  count: number;
+  parent: number;
+  image: string | null;
+  permalink: string;
 };
 
 export type Application = {

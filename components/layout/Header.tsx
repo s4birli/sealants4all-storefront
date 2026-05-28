@@ -2,8 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Search, ShoppingCart, User, ShieldCheck } from "lucide-react";
-import { PRODUCTS } from "@/lib/data/products";
+import { searchProducts, totalProductCount } from "@/lib/search";
 import { useCart, useCartCount, useCartTotals } from "@/components/cart/useCart";
 import { useHydrated } from "@/lib/hooks/useHydrated";
 import { gbp } from "@/lib/fmt";
@@ -19,6 +21,7 @@ const PLACEHOLDERS = [
 ];
 
 export function Header() {
+  const router = useRouter();
   const setOpen = useCart((s) => s.setOpen);
   const count = useCartCount();
   const totals = useCartTotals();
@@ -36,17 +39,15 @@ export function Header() {
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
 
-  const suggestions = useMemo(() => {
-    if (!query) return [];
-    const q = query.toLowerCase();
-    return PRODUCTS.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.brand.toLowerCase().includes(q) ||
-        p.sku.toLowerCase().includes(q) ||
-        p.use.toLowerCase().includes(q),
-    ).slice(0, 6);
-  }, [query]);
+  const hits = useMemo(() => searchProducts(query, 6), [query]);
+
+  const submit = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const q = query.trim();
+    if (!q) return;
+    router.push(`/search?q=${encodeURIComponent(q)}`);
+    setFocused(false);
+  };
 
   return (
     <header className="header">
@@ -58,7 +59,7 @@ export function Header() {
             </span>
           </Link>
 
-          <div className="search-wrap">
+          <form className="search-wrap" onSubmit={submit} role="search">
             <span className="search-icon">
               <Search size={18} strokeWidth={2} />
             </span>
@@ -69,18 +70,19 @@ export function Header() {
               onChange={(e) => setQuery(e.target.value)}
               onFocus={() => setFocused(true)}
               onBlur={() => setTimeout(() => setFocused(false), 150)}
-              aria-label="Search products, brands, SKUs"
+              aria-label={`Search ${totalProductCount()} products, brands, SKUs`}
+              autoComplete="off"
             />
-            <button className="search-go" aria-label="Search">
+            <button className="search-go" aria-label="Search" type="submit">
               Search
             </button>
 
-            {focused && suggestions.length > 0 && (
+            {focused && hits.length > 0 && (
               <div role="listbox" className="search-suggest">
-                {suggestions.map((p) => (
-                  <a
+                {hits.map(({ product: p }) => (
+                  <Link
                     key={p.sku}
-                    href={`/product/${p.sku.toLowerCase()}`}
+                    href={`/product/${p.slug}`}
                     role="option"
                     aria-selected={false}
                     onMouseDown={() => {
@@ -96,13 +98,42 @@ export function Header() {
                       borderBottom: "1px solid var(--surface-2)",
                     }}
                   >
-                    <Placeholder
-                      ratio="1 / 1"
-                      cap={p.brand.split(" ")[0]}
-                      style={{ width: 48 }}
-                    />
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: 14 }}>
+                    <div
+                      style={{
+                        position: "relative",
+                        width: 48,
+                        height: 48,
+                        background: "var(--surface)",
+                        borderRadius: 4,
+                        overflow: "hidden",
+                      }}
+                    >
+                      {p.image ? (
+                        <Image
+                          src={p.image}
+                          alt=""
+                          fill
+                          sizes="48px"
+                          style={{ objectFit: "contain", padding: 2 }}
+                          unoptimized={p.image.endsWith(".webp")}
+                        />
+                      ) : (
+                        <Placeholder
+                          ratio="1 / 1"
+                          cap={p.brand.split(" ")[0]}
+                        />
+                      )}
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <div
+                        style={{
+                          fontWeight: 600,
+                          fontSize: 14,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
                         {p.name}
                       </div>
                       <div style={{ fontSize: 12, color: "var(--muted)" }}>
@@ -111,17 +142,22 @@ export function Header() {
                     </div>
                     <div
                       className="tabular"
-                      style={{ fontSize: 14, fontWeight: 700 }}
+                      style={{ fontSize: 14, fontWeight: 700, whiteSpace: "nowrap" }}
                     >
-                      {gbp(p.from)}
+                      {p.priceAvailable ? gbp(p.price) : "POA"}
                     </div>
-                  </a>
+                  </Link>
                 ))}
-                <div
+                <button
+                  type="submit"
                   style={{
+                    width: "100%",
+                    textAlign: "left",
                     padding: "10px 14px",
                     fontSize: 12,
-                    color: "var(--muted)",
+                    color: "var(--brand-500)",
+                    fontWeight: 600,
+                    background: "var(--surface)",
                   }}
                 >
                   Press{" "}
@@ -135,11 +171,11 @@ export function Header() {
                   >
                     ↵
                   </kbd>{" "}
-                  to search the full catalogue
-                </div>
+                  to see all results for &ldquo;{query}&rdquo;
+                </button>
               </div>
             )}
-          </div>
+          </form>
 
           <div className="header-actions">
             <a className="icon-btn" href="#account" aria-label="Account">
@@ -149,7 +185,7 @@ export function Header() {
                 <span className="sub">Sign in</span>
               </span>
             </a>
-            <a
+            <Link
               className="icon-btn"
               href="/trade"
               style={{ color: "var(--brand-500)" }}
@@ -159,7 +195,7 @@ export function Header() {
                 Trade
                 <span className="sub">Bulk pricing</span>
               </span>
-            </a>
+            </Link>
             <button
               className="cart-pill"
               onClick={() => setOpen(true)}
