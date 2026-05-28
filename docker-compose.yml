@@ -1,0 +1,35 @@
+# Optional: run Postgres + Redis via Docker instead of `brew services`.
+# To use:  docker compose up -d
+# Default is brew services — see README for both options.
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: s4a-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: medusa
+      POSTGRES_PASSWORD: medusa_dev
+      POSTGRES_DB: medusa_store
+    ports:
+      - "5432:5432"
+    volumes:
+      - s4a-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U medusa -d medusa_store"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: s4a-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - s4a-redis-data:/data
+
+volumes:
+  s4a-postgres-data:
+  s4a-redis-data:

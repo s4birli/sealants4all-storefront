@@ -123,14 +123,94 @@ pnpm build && pnpm start
 Set `NEXT_PUBLIC_*` vars on the host. The service worker is only generated on
 production builds (`NODE_ENV=production`).
 
+## Admin panel — Medusa.js v2
+
+Open-source headless commerce backend at `apps/medusa/apps/backend/`.
+Bundles the React-based admin dashboard out of the box — runs at
+`http://localhost:9000/app`. Picked after a benchmark sweep of 10
+candidates (Strapi, Payload, Directus, Saleor, Vendure, Refine, ERPNext,
+Odoo, Sylius): Medusa won on TS-native DX, MIT licence, B2B primitives
+(customer groups, price lists, tier pricing, sales channels) and a
+first-party Next.js storefront SDK.
+
+### Database
+
+- **PostgreSQL 15** — runs locally via `brew services start postgresql@15`
+  or Docker (`docker compose up -d`). Medusa v2 is Postgres-first; Mongo
+  support was dropped in v2.
+- **Redis 7** — Medusa uses an in-memory cache by default, but production
+  needs Redis for workflows, event bus and locking. Brew or Docker again.
+
+DB and role are pre-provisioned: `medusa_store` owned by role `medusa`
+(password `medusa_dev` — change for production).
+
+### First-time setup
+
+```bash
+# 1. Postgres + Redis (skip if already running)
+brew services start postgresql@15
+brew services start redis
+psql -h 127.0.0.1 postgres <<SQL
+CREATE DATABASE medusa_store;
+CREATE ROLE medusa WITH LOGIN PASSWORD 'medusa_dev';
+GRANT ALL PRIVILEGES ON DATABASE medusa_store TO medusa;
+ALTER DATABASE medusa_store OWNER TO medusa;
+SQL
+
+# 2. Install backend deps + run migrations
+cd apps/medusa
+pnpm install
+cd apps/backend
+./node_modules/.bin/medusa db:migrate
+
+# 3. Create admin user
+./node_modules/.bin/medusa user --email you@example.com --password 'change-me'
+
+# 4. Import the 207-SKU catalogue from data/scraped/
+./node_modules/.bin/medusa exec ./src/scripts/seed-s4a.ts
+```
+
+### Daily run
+
+```bash
+# From apps/medusa/apps/backend/
+./node_modules/.bin/medusa develop
+# Admin: http://localhost:9000/app    (login with the user you created)
+# Store API: http://localhost:9000/store/...
+```
+
+### Re-importing the catalogue
+
+If the live WC site at sealants4all.co.uk changes, refresh and re-import:
+
+```bash
+pnpm refresh-data            # from repo root — re-scrape WP/WC
+cp data/scraped/{products,categories}.json apps/medusa/apps/backend/src/data/
+cd apps/medusa/apps/backend
+./node_modules/.bin/medusa exec ./src/scripts/seed-s4a.ts   # idempotent — skips existing
+```
+
+### Storefront → Medusa wiring (Phase 2 next step)
+
+The Next.js storefront still reads from static `lib/data/*.ts` modules
+today. To switch onto Medusa's Store API, set in `.env.local`:
+
+```
+NEXT_PUBLIC_MEDUSA_BACKEND_URL=http://localhost:9000
+NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=pk_xxxxxxxxxxxx
+```
+
+The publishable key prints at the end of the seed script; you can also
+copy a fresh one from Admin → Settings → API Key Management.
+
 ## Phase roadmap
 
-This handoff = **homepage only**. Coming:
-
-- **Phase 1.5** — PDP, category page, cart page, 4-step checkout, trade apply
-  form
-- **Phase 2** — Medusa.js backend, Stripe, Typesense search, trade dashboard
-- **Phase 3** — Admin dashboard, Pipedrive integration
+- **Phase 1.5** — PDP enrichment, category sidebar filters, full cart
+  page, 4-step checkout, trade apply form
+- **Phase 2** — Replace `lib/data/*.ts` static modules with Medusa Store
+  API calls, Stripe, Typesense search, trade dashboard
+- **Phase 3** — Pipedrive sync, B2B quote workflows, multi-warehouse split
+  shipping
 
 ## License
 
