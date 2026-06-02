@@ -3,15 +3,25 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { useShallow } from "zustand/react/shallow";
-import { PRODUCT_BY_SKU } from "@/lib/data/products";
+import { deriveTiers } from "@/lib/pricing";
 import { tierForQty } from "@/lib/fmt";
 
-export type CartItem = { sku: string; qty: number };
+/** Snapshot of product data captured when an item is added to the basket. */
+export type CartSnapshot = {
+  sku: string;
+  variantId: string;
+  name: string;
+  brand: string;
+  image: string | null;
+  basePrice: number;
+};
+
+export type CartItem = CartSnapshot & { qty: number };
 
 type CartState = {
   items: CartItem[];
   open: boolean;
-  add: (sku: string, qty?: number) => void;
+  add: (product: CartSnapshot, qty?: number) => void;
   update: (sku: string, qty: number) => void;
   remove: (sku: string) => void;
   clear: () => void;
@@ -23,15 +33,15 @@ export const useCart = create<CartState>()(
     (set) => ({
       items: [],
       open: false,
-      add: (sku, qty = 1) =>
+      add: (product, qty = 1) =>
         set((state) => {
-          const idx = state.items.findIndex((i) => i.sku === sku);
+          const idx = state.items.findIndex((i) => i.sku === product.sku);
           if (idx >= 0) {
             const next = [...state.items];
-            next[idx] = { ...next[idx], qty: next[idx].qty + qty };
+            next[idx] = { ...next[idx], ...product, qty: next[idx].qty + qty };
             return { items: next };
           }
-          return { items: [...state.items, { sku, qty }] };
+          return { items: [...state.items, { ...product, qty }] };
         }),
       update: (sku, qty) =>
         set((state) => ({
@@ -65,11 +75,10 @@ export function computeTotals(items: CartItem[]): CartTotals {
   let sub = 0;
   let savings = 0;
   for (const it of items) {
-    const p = PRODUCT_BY_SKU.get(it.sku);
-    if (!p) continue;
-    const t = tierForQty(p.tiers, it.qty);
+    const tiers = deriveTiers(it.basePrice);
+    const t = tierForQty(tiers, it.qty);
     sub += t.price * it.qty;
-    savings += (p.tiers[0].price - t.price) * it.qty;
+    savings += (tiers[0].price - t.price) * it.qty;
     units += it.qty;
   }
   const vat = sub * 0.2;

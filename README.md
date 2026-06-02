@@ -98,17 +98,13 @@ Replace by:
    designer's preferred tool. Delete `scripts/generate-icons.mjs` once real
    icons are in.
 
-## Where to swap in Medusa later
+## Data layer
 
-The data layer in `lib/data/` is intentionally framework-free. To switch to
-Medusa:
-
-1. Add `MEDUSA_BACKEND_URL` to `.env`.
-2. Replace each `export const X = [...]` in `lib/data/*.ts` with a
-   server-component-friendly async fetcher (e.g. `export async function
-   getProducts(): Promise<Product[]>`).
-3. Update consumers (homepage components) — most are already server components
-   and accept the data shape as-is.
+The catalogue (products, prices, categories, search) is read live from Medusa
+via `lib/catalog.ts` — see [Storefront → Medusa wiring](#storefront--medusa-wiring-live).
+Only editorial config remains static under `lib/data/` (brands, hero slides,
+applications, reviews, category nav chrome) plus the curation SKU lists in
+`lib/curation.ts`. The shared `Product` shape lives in `lib/data/types.ts`.
 
 ## Deployment
 
@@ -190,10 +186,13 @@ cd apps/medusa/apps/backend
 ./node_modules/.bin/medusa exec ./src/scripts/seed-s4a.ts   # idempotent — skips existing
 ```
 
-### Storefront → Medusa wiring (Phase 2 next step)
+### Storefront → Medusa wiring (live)
 
-The Next.js storefront still reads from static `lib/data/*.ts` modules
-today. To switch onto Medusa's Store API, set in `.env.local`:
+The Next.js storefront now reads product, price, category, and search data
+**live from Medusa's Store API** — Medusa is the single source of truth.
+Adding or editing a product in Admin shows on the storefront immediately
+(pages are server-rendered on demand with `cache: "no-store"`). Configure in
+`.env.local`:
 
 ```
 NEXT_PUBLIC_MEDUSA_BACKEND_URL=http://localhost:9000
@@ -203,14 +202,56 @@ NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=pk_xxxxxxxxxxxx
 The publishable key prints at the end of the seed script; you can also
 copy a fresh one from Admin → Settings → API Key Management.
 
+Data flow:
+
+- `lib/medusa.ts` — server-side Store API client (region resolution, product fetch).
+- `lib/medusa-map.ts` — maps a Medusa product to the storefront `Product` model
+  (derives bulk tiers from the unit price, brand/ratings from metadata, curated
+  category buckets).
+- `lib/catalog.ts` — high-level server helpers (`getAllProducts`,
+  `getProductBySlug`, `getProductsByCategory`, `getProductsBySkus`).
+- `app/api/catalog` + `CatalogSearchProvider` — feed the client-side fuzzy
+  search used by the header and `/search`.
+- Editorial-only data (brands, hero slides, applications, reviews, and the
+  best/new/deals curation SKU lists in `lib/curation.ts`) stays in the repo.
+
+If the local Medusa DB predates this wiring, run the one-time repair
+(creates the GBP region, removes Medusa starter demo data, re-links
+categories — idempotent):
+
+```bash
+cd apps/medusa/apps/backend
+./node_modules/.bin/medusa exec ./src/scripts/rebuild-store.ts
+```
+
+### Channel sync exports
+
+A2X is not used for product/listing sync. Medusa is the catalogue source of
+truth for the own storefront, B2B trade sales, and marketplace channels:
+Amazon, eBay, TikTok Shop, Etsy, and Vinted/manual review.
+
+```bash
+pnpm channel:export
+```
+
+This writes own-store snapshot, Amazon/eBay/TikTok/Etsy draft payloads, Vinted
+manual review CSV, B2B price list, SKU mapping template, and a summary under
+`apps/medusa/apps/backend/exports/channel-sync/`. It does not publish anything
+live. Product create/update events append local pending jobs to
+`outbox.jsonl`; live adapters should only be enabled after channel credentials,
+seller policies, category mapping, retries, rate limits, and idempotent listing
+storage are configured.
+
 ## Phase roadmap
 
 - **Phase 1.5** — PDP enrichment, category sidebar filters, full cart
   page, 4-step checkout, trade apply form
-- **Phase 2** — Replace `lib/data/*.ts` static modules with Medusa Store
-  API calls, Stripe, Typesense search, trade dashboard
+- **Phase 2 (done)** — Storefront reads catalogue/prices/categories/search
+  live from Medusa's Store API; static `lib/data` catalogue removed
+- **Phase 2.5** — Medusa cart/checkout + Stripe, real inventory management,
+  bulk tiers as Medusa price lists, Typesense search, trade dashboard
 - **Phase 3** — Pipedrive sync, B2B quote workflows, multi-warehouse split
-  shipping
+  shipping, live marketplace channel adapters
 
 ## License
 

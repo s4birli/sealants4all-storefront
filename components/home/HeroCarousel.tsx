@@ -1,15 +1,23 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { HERO_SLIDES } from "@/lib/data/heroSlides";
-import { Placeholder } from "@/components/ui/Placeholder";
+import type { HeroSlide } from "@/lib/data/types";
 import { Stars } from "@/components/product/Stars";
 
 const AUTOPLAY_MS = 6000;
 
-export function HeroCarousel() {
-  const slides = HERO_SLIDES;
+// Visual per slide, cycled by index so it works for any number of DB-driven
+// slides. Local /public images — themed stock photos for now.
+const HERO_IMAGES = [
+  "/home/hero-bulk.jpg",
+  "/home/hero-sika.jpg",
+  "/home/hero-delivery.jpg",
+];
+
+export function HeroCarousel({ slides = HERO_SLIDES }: { slides?: HeroSlide[] }) {
   const [i, setI] = useState(0);
   const [paused, setPaused] = useState(false);
 
@@ -86,16 +94,21 @@ export function HeroCarousel() {
                 </div>
               </div>
               <div className="visual">
-                <Placeholder
-                  ratio="auto"
+                <Image
+                  src={HERO_IMAGES[idx % HERO_IMAGES.length]}
+                  alt={s.productCap || s.title}
+                  fill
+                  sizes="(max-width: 980px) 100vw, 40vw"
+                  priority={idx === 0}
+                  style={{ objectFit: "cover" }}
+                />
+                <div
                   style={{
                     position: "absolute",
                     inset: 0,
                     background:
-                      "repeating-linear-gradient(45deg, rgba(255,255,255,0.04) 0 8px, transparent 8px 16px), rgba(255,255,255,0.02)",
+                      "linear-gradient(120deg, rgba(0,0,0,0.30), rgba(0,0,0,0.05) 55%)",
                   }}
-                  tag={s.tag}
-                  cap={s.productCap}
                 />
                 <span
                   className="badge"

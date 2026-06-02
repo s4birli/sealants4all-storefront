@@ -16,6 +16,7 @@ export type ProductCategoryRef = { id: string; name: string };
 
 export type Product = {
   id: number;
+  variantId: string;
   sku: string;
   slug: string;
   num: string;
@@ -38,6 +39,7 @@ export type Product = {
   reviews: number;
   categories: ProductCategoryRef[];
   curatedCategory: string | null;
+  collectionHandle: string | null;
   tiers: Tier[];
   cap: string;
 };

@@ -1,7 +1,7 @@
 {
   "name": "medusa",
   "private": false,
-  "packageManager": "npm@10.9.2",
+  "packageManager": "pnpm@9.15.9",
   "engines": {
     "node": ">=20"
   },

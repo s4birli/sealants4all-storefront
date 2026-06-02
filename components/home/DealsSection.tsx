@@ -2,13 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Tag, Clock } from "lucide-react";
-import { DEALS_SKU } from "@/lib/data/products";
+import type { Product } from "@/lib/data/types";
 import { Carousel } from "@/components/home/Carousel";
 import { ProductCard } from "@/components/product/ProductCard";
 
 const HOURS_AHEAD = 62;
 
-export function DealsSection() {
+export function DealsSection({ products }: { products: Product[] }) {
   const target = useMemo(() => {
     return Date.now() + HOURS_AHEAD * 3600 * 1000;
   }, []);
@@ -70,8 +70,8 @@ export function DealsSection() {
           </div>
         </div>
         <Carousel>
-          {DEALS_SKU.map((sku) => (
-            <ProductCard key={sku} sku={sku} />
+          {products.map((p) => (
+            <ProductCard key={p.sku} product={p} />
           ))}
         </Carousel>
       </div>

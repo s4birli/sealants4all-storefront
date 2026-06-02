@@ -7,14 +7,10 @@ import { Footer } from "@/components/layout/Footer";
 import { Stars } from "@/components/product/Stars";
 import { Placeholder } from "@/components/ui/Placeholder";
 import { AddToBasketButton } from "@/components/product/AddToBasketButton";
-import { PRODUCT_BY_SLUG, PRODUCTS } from "@/lib/data/products";
+import { getProductBySlug } from "@/lib/catalog";
 import { plain2 } from "@/lib/fmt";
 
-export const dynamicParams = false;
-
-export function generateStaticParams() {
-  return PRODUCTS.map((p) => ({ slug: p.slug }));
-}
+export const revalidate = 60;
 
 export default async function ProductPage({
   params,
@@ -22,7 +18,7 @@ export default async function ProductPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const product = PRODUCT_BY_SLUG.get(slug);
+  const product = await getProductBySlug(slug);
   if (!product) notFound();
 
   const incVat = product.priceAvailable ? product.price * 1.2 : 0;
@@ -258,7 +254,17 @@ export default async function ProductPage({
                   </div>
                 )}
 
-                <AddToBasketButton sku={product.sku} disabled={!product.priceAvailable || product.stock === "out"} />
+                <AddToBasketButton
+                  product={{
+                    sku: product.sku,
+                    variantId: product.variantId,
+                    name: product.name,
+                    brand: product.brand,
+                    image: product.image,
+                    basePrice: product.tiers[0].price,
+                  }}
+                  disabled={!product.priceAvailable || product.stock === "out"}
+                />
 
                 {/* Description */}
                 {product.shortDescription && (

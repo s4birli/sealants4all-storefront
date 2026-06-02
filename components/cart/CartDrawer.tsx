@@ -3,7 +3,7 @@
 import { useEffect, useMemo } from "react";
 import Image from "next/image";
 import { Check, ShoppingCart } from "lucide-react";
-import { PRODUCT_BY_SKU } from "@/lib/data/products";
+import { deriveTiers } from "@/lib/pricing";
 import { plain2, tierForQty } from "@/lib/fmt";
 import { Placeholder } from "@/components/ui/Placeholder";
 import {
@@ -35,14 +35,13 @@ export function CartDrawer() {
 
   const bulkHint = useMemo(() => {
     for (const it of items) {
-      const p = PRODUCT_BY_SKU.get(it.sku);
-      if (!p) continue;
-      const nextTier = p.tiers.find((t) => t.min > it.qty);
+      const tiers = deriveTiers(it.basePrice);
+      const nextTier = tiers.find((t) => t.min > it.qty);
       if (!nextTier) continue;
       const need = nextTier.min - it.qty;
-      const curT = tierForQty(p.tiers, it.qty);
+      const curT = tierForQty(tiers, it.qty);
       const save = (curT.price - nextTier.price) * nextTier.min;
-      if (save > 0.5 && need <= 30) return { product: p, need, save, nextTier };
+      if (save > 0.5 && need <= 30) return { product: it, need, save, nextTier };
     }
     return null;
   }, [items]);
@@ -180,29 +179,27 @@ export function CartDrawer() {
           )}
 
           {items.map((it) => {
-            const p = PRODUCT_BY_SKU.get(it.sku);
-            if (!p) return null;
-            const tier = tierForQty(p.tiers, it.qty);
+            const tiers = deriveTiers(it.basePrice);
+            const tier = tierForQty(tiers, it.qty);
             const line = tier.price * it.qty;
-            const saving = (p.tiers[0].price - tier.price) * it.qty;
-            const tierIdx =
-              p.tiers.findIndex((x) => x.min === tier.min) + 1;
+            const saving = (tiers[0].price - tier.price) * it.qty;
+            const tierIdx = tiers.findIndex((x) => x.min === tier.min) + 1;
             return (
               <div key={it.sku} className="cart-line">
                 <div className="thumb">
-                  {p.image ? (
+                  {it.image ? (
                     <Image
-                      src={p.image}
-                      alt={p.name}
+                      src={it.image}
+                      alt={it.name}
                       fill
                       sizes="72px"
                       style={{ objectFit: "contain", padding: 4 }}
-                      unoptimized={p.image.endsWith(".webp")}
+                      unoptimized={it.image.endsWith(".webp")}
                     />
                   ) : (
                     <Placeholder
                       ratio="1 / 1"
-                      cap={p.brand.split(" ")[0]}
+                      cap={it.brand.split(" ")[0]}
                       style={{ position: "absolute", inset: 0 }}
                     />
                   )}
@@ -217,15 +214,15 @@ export function CartDrawer() {
                       textTransform: "uppercase",
                     }}
                   >
-                    {p.brand}
+                    {it.brand}
                   </div>
                   <div
                     style={{ fontWeight: 700, fontSize: 14, marginTop: 2 }}
                   >
-                    {p.name}
+                    {it.name}
                   </div>
                   <div style={{ fontSize: 12, color: "var(--muted)" }}>
-                    SKU {p.sku}
+                    SKU {it.sku}
                   </div>
                   <div
                     className="tabular"
@@ -235,12 +232,12 @@ export function CartDrawer() {
                       marginTop: 4,
                     }}
                   >
-                    £{plain2(tier.price)} each · tier {tierIdx}/{p.tiers.length}
+                    £{plain2(tier.price)} each · tier {tierIdx}/{tiers.length}
                   </div>
                   <div className="flex items-center gap-3 mt-2">
                     <div className="stepper">
                       <button
-                        onClick={() => update(p.sku, it.qty - 1)}
+                        onClick={() => update(it.sku, it.qty - 1)}
                         aria-label="Decrease"
                       >
                         −
@@ -248,18 +245,18 @@ export function CartDrawer() {
                       <input
                         value={it.qty}
                         onChange={(e) =>
-                          update(p.sku, parseInt(e.target.value || "0", 10))
+                          update(it.sku, parseInt(e.target.value || "0", 10))
                         }
                       />
                       <button
-                        onClick={() => update(p.sku, it.qty + 1)}
+                        onClick={() => update(it.sku, it.qty + 1)}
                         aria-label="Increase"
                       >
                         +
                       </button>
                     </div>
                     <button
-                      onClick={() => remove(p.sku)}
+                      onClick={() => remove(it.sku)}
                       className="btn btn-ghost btn-sm"
                       style={{ color: "var(--muted)" }}
                     >

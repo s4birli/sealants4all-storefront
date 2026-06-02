@@ -1,8 +1,9 @@
-import { BEST_SKU } from "@/lib/data/products";
+import type { Product } from "@/lib/data/types";
 import { Carousel } from "@/components/home/Carousel";
 import { ProductCard } from "@/components/product/ProductCard";
 
-export function BestSellers() {
+export function BestSellers({ products }: { products: Product[] }) {
+  if (products.length === 0) return null;
   return (
     <section className="section">
       <div className="container">
@@ -11,8 +12,8 @@ export function BestSellers() {
           title="Best sellers"
           link={{ label: "See all best sellers", href: "#bestsellers" }}
         >
-          {BEST_SKU.map((sku) => (
-            <ProductCard key={sku} sku={sku} />
+          {products.map((p) => (
+            <ProductCard key={p.sku} product={p} />
           ))}
         </Carousel>
       </div>

@@ -3,22 +3,18 @@
 import { useState } from "react";
 import { ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
-import { PRODUCT_BY_SKU } from "@/lib/data/products";
-import { useCart } from "@/components/cart/useCart";
+import { useCart, type CartSnapshot } from "@/components/cart/useCart";
 
 export function AddToBasketButton({
-  sku,
+  product,
   disabled = false,
 }: {
-  sku: string;
+  product: CartSnapshot;
   disabled?: boolean;
 }) {
   const [qty, setQty] = useState(1);
   const add = useCart((s) => s.add);
   const setOpen = useCart((s) => s.setOpen);
-  const product = PRODUCT_BY_SKU.get(sku);
-
-  if (!product) return null;
 
   return (
     <div style={{ display: "flex", gap: 12, alignItems: "stretch" }}>
@@ -39,7 +35,7 @@ export function AddToBasketButton({
         disabled={disabled}
         style={{ flex: 1 }}
         onClick={() => {
-          add(sku, qty);
+          add(product, qty);
           toast.success(`Added ${qty} × ${product.name} to basket`);
           setOpen(true);
         }}

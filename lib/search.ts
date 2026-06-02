@@ -1,6 +1,5 @@
 import Fuse from "fuse.js";
 import type { IFuseOptions, FuseResult } from "fuse.js";
-import { PRODUCTS } from "@/lib/data/products";
 import type { Product } from "@/lib/data/types";
 
 export type SearchHit = {
@@ -25,17 +24,20 @@ const fuseOptions: IFuseOptions<Product> = {
   ],
 };
 
-// Single shared index across the app
-let fuseInstance: Fuse<Product> | null = null;
-function getFuse(): Fuse<Product> {
-  if (!fuseInstance) fuseInstance = new Fuse(PRODUCTS, fuseOptions);
-  return fuseInstance;
+/** Build a reusable Fuse index over a product list. */
+export function buildSearchIndex(products: Product[]): Fuse<Product> {
+  return new Fuse(products, fuseOptions);
 }
 
-export function searchProducts(query: string, limit = 8): SearchHit[] {
+/** Run a search against a prepared index. */
+export function searchWithIndex(
+  index: Fuse<Product>,
+  query: string,
+  limit = 8,
+): SearchHit[] {
   const q = query.trim();
   if (!q) return [];
-  const results: FuseResult<Product>[] = getFuse().search(q, { limit });
+  const results: FuseResult<Product>[] = index.search(q, { limit });
   return results.map((r) => ({
     product: r.item,
     score: r.score ?? 1,
@@ -43,8 +45,4 @@ export function searchProducts(query: string, limit = 8): SearchHit[] {
       typeof m.value === "string" ? [m.value] : [],
     ),
   }));
-}
-
-export function totalProductCount(): number {
-  return PRODUCTS.length;
 }

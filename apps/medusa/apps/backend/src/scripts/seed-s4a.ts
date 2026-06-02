@@ -141,13 +141,16 @@ export default async function seedS4ACatalog({ container }: ExecArgs) {
     },
   });
 
-  // ── 2. Region: re-use existing region that covers GB, else create UK ─
-  logger.info("🌍  resolving region for GB");
+  // ── 2. Region: re-use an existing GBP region, else create UK ──────────
+  // NOTE: match on currency_code, NOT country. The Medusa starter "Europe"
+  // (EUR) region claims every country incl. `gb`, so matching by country would
+  // reuse it and leave GBP prices unresolvable.
+  logger.info("🌍  resolving GBP region");
   const allRegions = (await query.graph({
     entity: "region",
     fields: ["id", "name", "currency_code", "countries.iso_2"],
   })).data as { id: string; name: string; currency_code: string; countries: { iso_2: string }[] }[];
-  const gbRegion = allRegions.find((r) => r.countries?.some((c) => c.iso_2 === "gb"));
+  const gbRegion = allRegions.find((r) => r.currency_code === "gbp");
   const regionId = gbRegion
     ? gbRegion.id
     : (await createRegionsWorkflow(container).run({

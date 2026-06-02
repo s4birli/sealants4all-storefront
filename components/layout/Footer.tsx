@@ -44,9 +44,12 @@ export function Footer() {
               >
                 9:00 – 18:00, Monday to Friday
               </div>
-              <div style={{ color: "rgba(255,255,255,0.65)", fontSize: 13 }}>
+              <a
+                href="mailto:sales@sealants4all.co.uk"
+                style={{ color: "rgba(255,255,255,0.65)", fontSize: 13 }}
+              >
                 sales@sealants4all.co.uk
-              </div>
+              </a>
             </div>
           </div>
           <div>
@@ -61,7 +64,7 @@ export function Footer() {
           <div>
             <h4>Brands</h4>
             {BRANDS.map((b) => (
-              <a key={b.id} href={`#${b.id}`}>
+              <a key={b.id} href={`/search?q=${encodeURIComponent(b.name)}`}>
                 {b.name}
               </a>
             ))}

@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Search, ShoppingCart, User, ShieldCheck } from "lucide-react";
-import { searchProducts, totalProductCount } from "@/lib/search";
+import { useCatalogSearch } from "@/components/catalog/CatalogSearchProvider";
 import { useCart, useCartCount, useCartTotals } from "@/components/cart/useCart";
 import { useHydrated } from "@/lib/hooks/useHydrated";
 import { gbp } from "@/lib/fmt";
@@ -26,6 +26,7 @@ export function Header() {
   const count = useCartCount();
   const totals = useCartTotals();
   const hydrated = useHydrated();
+  const { search, count: catalogCount } = useCatalogSearch();
 
   const [phIdx, setPhIdx] = useState(0);
   useEffect(() => {
@@ -39,7 +40,7 @@ export function Header() {
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
 
-  const hits = useMemo(() => searchProducts(query, 6), [query]);
+  const hits = useMemo(() => search(query, 6), [query, search]);
 
   const submit = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -70,7 +71,7 @@ export function Header() {
               onChange={(e) => setQuery(e.target.value)}
               onFocus={() => setFocused(true)}
               onBlur={() => setTimeout(() => setFocused(false), 150)}
-              aria-label={`Search ${totalProductCount()} products, brands, SKUs`}
+              aria-label={`Search ${catalogCount} products, brands, SKUs`}
               autoComplete="off"
             />
             <button className="search-go" aria-label="Search" type="submit">

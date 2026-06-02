@@ -6,7 +6,16 @@ import { CATEGORIES } from "@/lib/data/categories";
 import { APPLICATIONS } from "@/lib/data/applications";
 import { BRANDS } from "@/lib/data/brands";
 
-const TOP_LINKS = ["Sika", "Fischer", "Soudal", "Caravan", "EWI", "Fire", "Waterproofing"];
+// Top-bar shortcuts → real destinations (brand searches + curated category pages).
+const TOP_LINKS: { label: string; href: string }[] = [
+  { label: "Sika", href: "/search?q=Sika" },
+  { label: "Fischer", href: "/search?q=Fischer" },
+  { label: "Soudal", href: "/search?q=Soudal" },
+  { label: "Caravan", href: "/category/caravan" },
+  { label: "EWI", href: "/category/ewi" },
+  { label: "Fire", href: "/category/fire" },
+  { label: "Waterproofing", href: "/category/water" },
+];
 
 export function MegaNav() {
   const [open, setOpen] = useState<string | null>(null);
@@ -26,7 +35,7 @@ export function MegaNav() {
         <div className="row">
           <a
             className={"mega-link primary " + (open === "all" ? "open" : "")}
-            href="#catalogue"
+            href="#categories"
             onMouseEnter={() => openMenu("all")}
             onFocus={() => openMenu("all")}
             onKeyDown={(e) => {
@@ -40,12 +49,8 @@ export function MegaNav() {
             <Menu size={16} strokeWidth={2} /> All products{" "}
             <span className="caret">▾</span>
           </a>
-          {TOP_LINKS.map((label) => (
-            <a
-              key={label}
-              href={`#${label.toLowerCase()}`}
-              className="mega-link"
-            >
+          {TOP_LINKS.map(({ label, href }) => (
+            <a key={label} href={href} className="mega-link">
               {label}
             </a>
           ))}
@@ -91,7 +96,7 @@ export function MegaNav() {
                 <div className="mega-col">
                   <h4>Top Brands</h4>
                   {BRANDS.slice(0, 6).map((b) => (
-                    <a key={b.id} href={`#${b.id}`}>
+                    <a key={b.id} href={`/search?q=${encodeURIComponent(b.name)}`}>
                       {b.name}
                     </a>
                   ))}
@@ -114,7 +119,7 @@ export function MegaNav() {
                   </div>
                   <a
                     className="btn btn-brand btn-sm mt-4"
-                    href="#s4all"
+                    href="/search?q=S4ALL%20Pro"
                   >
                     Shop now →
                   </a>

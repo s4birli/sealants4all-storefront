@@ -1,8 +1,12 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import { Inter, Manrope } from "next/font/google";
 import { Toaster } from "sonner";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { InstallPrompt } from "@/components/layout/InstallPrompt";
+import { NavProgressBar } from "@/components/layout/NavProgressBar";
+import { CatalogSearchProvider } from "@/components/catalog/CatalogSearchProvider";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 import "./globals.css";
 
 const inter = Inter({
@@ -54,10 +58,16 @@ export default function RootLayout({
   return (
     <html lang="en-GB" className={`${inter.variable} ${manrope.variable}`}>
       <body>
-        {children}
-        <CartDrawer />
-        <Toaster position="bottom-center" duration={2400} />
-        <InstallPrompt />
+        <Suspense fallback={null}>
+          <NavProgressBar />
+        </Suspense>
+        <CatalogSearchProvider>
+          {children}
+          <CartDrawer />
+          <Toaster position="bottom-center" duration={2400} />
+          <InstallPrompt />
+          <ChatWidget />
+        </CatalogSearchProvider>
       </body>
     </html>
   );

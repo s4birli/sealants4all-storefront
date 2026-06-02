@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { searchProducts, totalProductCount } from "@/lib/search";
+import { useCatalogSearch } from "@/components/catalog/CatalogSearchProvider";
 import { ProductCard } from "@/components/product/ProductCard";
+import { Skeleton, ProductGridSkeleton } from "@/components/ui/Skeleton";
 import { BRANDS } from "@/lib/data/brands";
 import type { BrandName } from "@/lib/data/types";
 
@@ -15,8 +16,9 @@ export function SearchResults() {
 
   const [brandFilter, setBrandFilter] = useState<BrandName | "ALL">("ALL");
   const [page, setPage] = useState(1);
+  const { search, count, ready } = useCatalogSearch();
 
-  const allHits = useMemo(() => searchProducts(q, 200), [q]);
+  const allHits = useMemo(() => search(q, 200), [q, search]);
 
   const filtered = useMemo(() => {
     if (brandFilter === "ALL") return allHits;
@@ -36,10 +38,22 @@ export function SearchResults() {
           Search the catalogue
         </h1>
         <p style={{ color: "var(--body)" }}>
-          Type in the search bar above. {totalProductCount()} products
-          available.
+          Type in the search bar above. {count} products available.
         </p>
       </div>
+    );
+  }
+
+  // Catalogue still loading on the client → show a skeleton, not "no matches".
+  if (!ready) {
+    return (
+      <>
+        <div className="section-head" style={{ marginBottom: 16 }}>
+          <Skeleton width={120} height={12} />
+        </div>
+        <Skeleton width={240} height={26} style={{ marginBottom: 24 }} />
+        <ProductGridSkeleton count={8} />
+      </>
     );
   }
 
@@ -122,7 +136,7 @@ export function SearchResults() {
             }}
           >
             {visible.map(({ product }) => (
-              <ProductCard key={product.sku} sku={product.sku} />
+              <ProductCard key={product.sku} product={product} />
             ))}
           </div>
 

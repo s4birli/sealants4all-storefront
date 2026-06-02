@@ -17,5 +17,11 @@
     "paths": { "@/*": ["./*"] }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", "design-refs", ".next", "public/sw.js"]
+  "exclude": [
+    "node_modules",
+    "design-refs",
+    ".next",
+    "public/sw.js",
+    "apps/medusa"
+  ]
 }

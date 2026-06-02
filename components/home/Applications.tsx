@@ -1,5 +1,5 @@
+import Image from "next/image";
 import { APPLICATIONS } from "@/lib/data/applications";
-import { Placeholder } from "@/components/ui/Placeholder";
 
 export function Applications() {
   return (
@@ -17,11 +17,13 @@ export function Applications() {
         <div className="app-grid">
           {APPLICATIONS.map((a) => (
             <a key={a.id} href={`#${a.id}`} className="app-card">
-              <Placeholder
-                ratio="auto"
-                cap={a.cap}
+              <Image
+                src={`/home/${a.id}.jpg`}
+                alt={a.name}
+                fill
+                sizes="(max-width: 600px) 100vw, (max-width: 900px) 50vw, 33vw"
                 className="app-img"
-                style={{ position: "absolute", inset: 0 }}
+                style={{ objectFit: "cover" }}
               />
               <div className="app-grad" />
               <div className="app-meta">

@@ -4,30 +4,26 @@ import Image from "next/image";
 import Link from "next/link";
 import { Heart, ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
-import { PRODUCT_BY_SKU, PRODUCT_META } from "@/lib/data/products";
+import type { Product } from "@/lib/data/types";
 import { plain2 } from "@/lib/fmt";
 import { Placeholder } from "@/components/ui/Placeholder";
 import { Stars } from "@/components/product/Stars";
 import { useCart } from "@/components/cart/useCart";
 
 type ProductCardProps = {
-  sku: string;
+  product: Product;
   showBadges?: boolean;
   isNew?: boolean;
   showBulkHint?: boolean;
 };
 
 export function ProductCard({
-  sku,
+  product,
   showBadges = true,
   isNew = false,
   showBulkHint = true,
 }: ProductCardProps) {
-  const product = PRODUCT_BY_SKU.get(sku);
-  const meta = PRODUCT_META[sku];
   const add = useCart((s) => s.add);
-
-  if (!product) return null;
 
   const list = product.regularPrice || product.price;
   const display = product.price;
@@ -42,22 +38,22 @@ export function ProductCard({
       : product.stock === "low"
         ? "Low stock"
         : "In stock";
-  const rating = meta?.rating ?? product.rating;
-  const reviews = meta?.reviews ?? product.reviews;
-  const stockCount = meta?.stock;
+  const rating = product.rating;
+  const reviews = product.reviews;
+  // Only surface a number when genuinely low (from real Medusa inventory).
+  const lowCount = product.stock === "low" ? product.lowStockRemaining : null;
   const bulkTier = product.tiers[1]; // 12+ tier
 
   return (
-    <article className="card product-card" id={sku}>
+    <article className="card product-card" id={product.sku}>
       <Link href={`/product/${product.slug}`} className="thumb" aria-label={product.name}>
         {product.image ? (
           <Image
             src={product.image}
             alt={product.name}
             fill
-            sizes="(max-width: 900px) 70vw, 25vw"
+            sizes="(max-width: 600px) 45vw, (max-width: 900px) 30vw, 240px"
             style={{ objectFit: "contain", padding: 8 }}
-            unoptimized={product.image.endsWith(".webp")}
           />
         ) : (
           <Placeholder
@@ -151,7 +147,7 @@ export function ProductCard({
             }}
           />{" "}
           {stockLabel}
-          {stockCount != null ? ` (${stockCount})` : ""}
+          {lowCount != null ? ` — only ${lowCount} left` : ""}
         </span>
       </div>
 
@@ -165,7 +161,17 @@ export function ProductCard({
         className="btn btn-primary btn-block"
         disabled={product.stock === "out" || !product.priceAvailable}
         onClick={() => {
-          add(sku, 1);
+          add(
+            {
+              sku: product.sku,
+              variantId: product.variantId,
+              name: product.name,
+              brand: product.brand,
+              image: product.image,
+              basePrice: product.tiers[0].price,
+            },
+            1,
+          );
           toast.success(`Added to basket — ${product.name}`);
         }}
       >
