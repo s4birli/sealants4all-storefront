@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getAllProducts } from "@/lib/catalog";
 import { CATEGORIES, CATEGORIES_FULL } from "@/lib/data/categories";
+import { getAllPosts } from "@/lib/blog";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,26 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "",
     "/search",
     "/trade",
+    "/blog",
+    "/about",
+    "/contact",
+    "/delivery",
+    "/returns",
+    "/terms",
+    "/privacy",
   ].map((path) => ({ url: `${BASE}${path}`, changeFrequency: "weekly", priority: path === "" ? 1 : 0.6 }));
+
+  let blogEntries: MetadataRoute.Sitemap = [];
+  try {
+    blogEntries = (await getAllPosts()).map((p) => ({
+      url: `${BASE}/blog/${p.slug}`,
+      lastModified: new Date(p.updated || p.date),
+      changeFrequency: "monthly",
+      priority: 0.6,
+    }));
+  } catch {
+    // Blog source unreachable — still emit the rest of the sitemap.
+  }
 
   const categorySlugs = Array.from(
     new Set([...CATEGORIES.map((c) => c.id), ...CATEGORIES_FULL.map((c) => c.slug)]),
@@ -34,5 +54,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // If Medusa is unreachable, still emit static + category routes.
   }
 
-  return [...staticEntries, ...categoryEntries, ...productEntries];
+  return [...staticEntries, ...blogEntries, ...categoryEntries, ...productEntries];
 }

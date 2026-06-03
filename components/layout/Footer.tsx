@@ -2,17 +2,21 @@ import Link from "next/link";
 import { Phone } from "lucide-react";
 import { CATEGORIES } from "@/lib/data/categories";
 import { BRANDS } from "@/lib/data/brands";
+import { ConsentPreferencesButton } from "@/components/layout/ConsentPreferencesButton";
 
-const HELP_LINKS = [
-  "Shipping",
-  "Returns",
-  "Datasheets",
-  "FAQ",
-  "Contact Us",
-  "Trade Account",
-  "My Account",
-  "Track Order",
-  "Modern Slavery",
+const HELP_LINKS: { label: string; href: string }[] = [
+  { label: "About Us", href: "/about" },
+  { label: "Trade Account", href: "/trade" },
+  { label: "Knowledge Base & Blog", href: "/blog" },
+  { label: "Contact Us", href: "/contact" },
+  { label: "Track Order", href: "#" },
+];
+
+const LEGAL_LINKS: { label: string; href: string }[] = [
+  { label: "Terms & Conditions", href: "/terms" },
+  { label: "Refund & Returns Policy", href: "/returns" },
+  { label: "Privacy Policy", href: "/privacy" },
+  { label: "Delivery Information", href: "/delivery" },
 ];
 
 const PAYMENT_METHODS = ["VISA", "MASTERCARD", "AMEX", "PAYPAL", "APPLE PAY", "KLARNA"];
@@ -50,6 +54,19 @@ export function Footer() {
               >
                 sales@sealants4all.co.uk
               </a>
+              <address
+                style={{
+                  color: "rgba(255,255,255,0.65)",
+                  fontSize: 13,
+                  marginTop: 8,
+                  fontStyle: "normal",
+                  lineHeight: 1.5,
+                }}
+              >
+                1 Filament Walk, The Light Bulb LU2.22,
+                <br />
+                London SW18 4GQ
+              </address>
             </div>
           </div>
           <div>
@@ -60,6 +77,7 @@ export function Footer() {
               </a>
             ))}
             <a href="#deals">Deals & Clearance</a>
+            <Link href="/blog">Blog &amp; Guides</Link>
           </div>
           <div>
             <h4>Brands</h4>
@@ -71,19 +89,33 @@ export function Footer() {
           </div>
           <div>
             <h4>Help & Account</h4>
-            {HELP_LINKS.map((l) => (
-              <a key={l} href="#">
-                {l}
-              </a>
+            {HELP_LINKS.map((l) =>
+              l.href.startsWith("/") ? (
+                <Link key={l.label} href={l.href}>
+                  {l.label}
+                </Link>
+              ) : (
+                <a key={l.label} href={l.href}>
+                  {l.label}
+                </a>
+              ),
+            )}
+            <h4 style={{ marginTop: 18 }}>Legals</h4>
+            {LEGAL_LINKS.map((l) => (
+              <Link key={l.label} href={l.href}>
+                {l.label}
+              </Link>
             ))}
+            <ConsentPreferencesButton />
           </div>
         </div>
       </div>
       <div className="container bottom">
         <div className="row">
           <div>
-            © 2026 All 4 Construction Limited · Co. No. 12 487 553 · VAT GB
-            348 9921 04 · London SW18 4GQ
+            © 2026 All 4 Construction Limited T/A Sealants4All · Co. No.
+            15321255 · VAT GB460779856 · 1 Filament Walk, The Light Bulb LU2.22,
+            London SW18 4GQ
           </div>
           <div className="payments">
             {PAYMENT_METHODS.map((p) => (

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -7,10 +8,46 @@ import { Footer } from "@/components/layout/Footer";
 import { Stars } from "@/components/product/Stars";
 import { Placeholder } from "@/components/ui/Placeholder";
 import { AddToBasketButton } from "@/components/product/AddToBasketButton";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { getProductBySlug } from "@/lib/catalog";
+import { SITE, absoluteUrl, breadcrumbSchema, excerpt } from "@/lib/seo";
 import { plain2 } from "@/lib/fmt";
 
 export const revalidate = 60;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const product = await getProductBySlug(slug);
+  if (!product) return {};
+  const title = `${product.name} — ${product.brand}`;
+  const description =
+    product.shortDescription ||
+    excerpt(product.description, 160) ||
+    `Buy ${product.name} from Sealants4All. Trade prices, dispatched in 24 hours.`;
+  const image = product.image || product.images[0];
+  return {
+    title,
+    description,
+    alternates: { canonical: `/product/${slug}` },
+    openGraph: {
+      type: "website",
+      title,
+      description,
+      url: absoluteUrl(`/product/${slug}`),
+      images: image ? [{ url: image }] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: image ? [image] : undefined,
+    },
+  };
+}
 
 export default async function ProductPage({
   params,
@@ -21,6 +58,56 @@ export default async function ProductPage({
   const product = await getProductBySlug(slug);
   if (!product) notFound();
 
+  // Product + Breadcrumb structured data → rich result with price, rating and
+  // availability in Google search.
+  const availability =
+    product.stock === "out"
+      ? "https://schema.org/OutOfStock"
+      : "https://schema.org/InStock";
+  const productSchema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description:
+      product.shortDescription || excerpt(product.description, 300),
+    sku: product.sku,
+    image: product.images.length ? product.images : product.image || undefined,
+    brand: { "@type": "Brand", name: product.brand },
+    ...(product.rating > 0 && product.reviews > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: product.rating,
+            reviewCount: product.reviews,
+          },
+        }
+      : {}),
+    ...(product.priceAvailable
+      ? {
+          offers: {
+            "@type": "Offer",
+            url: absoluteUrl(`/product/${slug}`),
+            priceCurrency: "GBP",
+            price: (product.price * 1.2).toFixed(2),
+            availability,
+            seller: { "@id": `${SITE.url}/#organization` },
+          },
+        }
+      : {}),
+  };
+  const crumbs = breadcrumbSchema([
+    { name: "Home", path: "/" },
+    ...(product.categories[0]
+      ? [
+          {
+            name: product.categories[0].name,
+            path: `/category/${product.categories[0].id}`,
+          },
+        ]
+      : []),
+    { name: product.name, path: `/product/${slug}` },
+  ]);
+
   const incVat = product.priceAvailable ? product.price * 1.2 : 0;
   const listPrice = product.regularPrice || product.price;
   const dealPct =
@@ -30,6 +117,7 @@ export default async function ProductPage({
 
   return (
     <>
+      <JsonLd schema={[productSchema, crumbs]} />
       <UtilityBar />
       <Header />
       <main id="top">

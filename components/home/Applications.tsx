@@ -1,16 +1,16 @@
 import Image from "next/image";
 import { APPLICATIONS } from "@/lib/data/applications";
 
-export function Applications() {
+export function Applications({ copy }: { copy?: Record<string, string> }) {
   return (
     <section className="section" style={{ background: "var(--surface)" }}>
       <div className="container">
         <div className="section-head">
           <div>
-            <h2 className="h-section">Shop by application</h2>
+            <h2 className="h-section">{copy?.heading ?? "Shop by application"}</h2>
             <div className="h-section-sub">
-              The right product for the job. Filtered by the work you&apos;re
-              actually doing.
+              {copy?.sub ??
+                "The right product for the job. Filtered by the work you're actually doing."}
             </div>
           </div>
         </div>

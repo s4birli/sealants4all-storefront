@@ -12,7 +12,7 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-export function Newsletter() {
+export function Newsletter({ copy }: { copy?: Record<string, string> }) {
   const [done, setDone] = useState(false);
   const {
     register,
@@ -34,8 +34,11 @@ export function Newsletter() {
       <div className="container">
         <div className="newsletter">
           <div>
-            <h3>Trade tips, new products, exclusive deals.</h3>
-            <p>Monthly. We respect the inbox. Unsubscribe in one click.</p>
+            <h3>{copy?.heading ?? "Trade tips, new products, exclusive deals."}</h3>
+            <p>
+              {copy?.sub ??
+                "Monthly. We respect the inbox. Unsubscribe in one click."}
+            </p>
           </div>
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
             <input

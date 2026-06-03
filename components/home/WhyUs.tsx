@@ -23,7 +23,7 @@ const ITEMS = [
   },
 ];
 
-export function WhyUs() {
+export function WhyUs({ copy }: { copy?: Record<string, string> }) {
   return (
     <section className="section" style={{ background: "var(--surface)" }}>
       <div className="container">
@@ -32,10 +32,12 @@ export function WhyUs() {
           style={{ justifyContent: "center", textAlign: "center" }}
         >
           <div>
-            <h2 className="h-section">Why choose Sealants4All</h2>
+            <h2 className="h-section">
+              {copy?.heading ?? "Why choose Sealants4All"}
+            </h2>
             <div className="h-section-sub">
-              Five years supplying UK trade. 50,000+ orders shipped. Zero
-              phone-only pricing.
+              {copy?.sub ??
+                "Five years supplying UK trade. 50,000+ orders shipped. Zero phone-only pricing."}
             </div>
           </div>
         </div>

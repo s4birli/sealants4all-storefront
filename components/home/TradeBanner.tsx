@@ -15,7 +15,7 @@ const STATS = [
   { v: "4.9", l: "TRADE NPS" },
 ];
 
-export function TradeBanner() {
+export function TradeBanner({ copy }: { copy?: Record<string, string> }) {
   return (
     <section className="section" id="trade">
       <div className="container">
@@ -38,15 +38,15 @@ export function TradeBanner() {
                   marginBottom: 14,
                 }}
               >
-                ★ For Trade Customers
+                ★ {copy?.eyebrow ?? "For Trade Customers"}
               </div>
               <h2>
-                Open a trade account — save up to 30% on bulk orders.
+                {copy?.title ??
+                  "Open a trade account — save up to 30% on bulk orders."}
               </h2>
               <p>
-                Volume pricing, net-30 terms, a named account manager, and
-                priority dispatch. Application takes 3 minutes. Decision within
-                1 business day.
+                {copy?.sub ??
+                  "Volume pricing, net-30 terms, a named account manager, and priority dispatch. Application takes 3 minutes. Decision within 1 business day."}
               </p>
               <div className="perks">
                 {PERKS.map((p) => (
@@ -62,8 +62,8 @@ export function TradeBanner() {
                 className="flex gap-3"
                 style={{ flexWrap: "wrap" }}
               >
-                <a href="/trade" className="btn btn-primary btn-lg">
-                  Apply now →
+                <a href={copy?.ctaHref ?? "/trade"} className="btn btn-primary btn-lg">
+                  {copy?.ctaLabel ?? "Apply now →"}
                 </a>
                 <a href="/trade" className="btn btn-outline-white btn-lg">
                   Learn more

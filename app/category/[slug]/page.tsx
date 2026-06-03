@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { UtilityBar } from "@/components/layout/UtilityBar";
@@ -6,8 +7,34 @@ import { Footer } from "@/components/layout/Footer";
 import { ProductCard } from "@/components/product/ProductCard";
 import { CATEGORIES_FULL, CATEGORIES } from "@/lib/data/categories";
 import { getProductsByCategory, getProductsByCuratedCategory } from "@/lib/catalog";
+import { absoluteUrl } from "@/lib/seo";
 
 export const revalidate = 60;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const category =
+    CATEGORIES.find((c) => c.id === slug) ??
+    CATEGORIES_FULL.find((c) => c.slug === slug);
+  if (!category) return {};
+  const title = `${category.name} — Trade prices, 24h dispatch`;
+  const description = `Shop ${category.name.toLowerCase()} at Sealants4All. Official UK distributor of Sika, Fischer, Soudal, Teroson, Terraco and Everbuild — dispatched in 24 hours.`;
+  return {
+    title,
+    description,
+    alternates: { canonical: `/category/${slug}` },
+    openGraph: {
+      type: "website",
+      title,
+      description,
+      url: absoluteUrl(`/category/${slug}`),
+    },
+  };
+}
 
 // Page the grid so a large category renders ~24 cards, not all 55+ at once —
 // smaller DOM + RSC payload + fewer images in flight. Mirrors the /search page

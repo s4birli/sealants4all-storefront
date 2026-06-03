@@ -2,7 +2,7 @@ import { REVIEWS } from "@/lib/data/reviews";
 import { Carousel } from "@/components/home/Carousel";
 import { Stars } from "@/components/product/Stars";
 
-export function Reviews() {
+export function Reviews({ copy }: { copy?: Record<string, string> }) {
   return (
     <section className="section">
       <div className="container">
@@ -15,10 +15,12 @@ export function Reviews() {
               <Stars value={5} size={20} />
               <span className="fw-700">4.8 / 5</span>
               <span style={{ color: "var(--body)" }}>
-                · 2,314 reviews on Trustpilot
+                · {copy?.sub ?? "2,314 reviews on Trustpilot"}
               </span>
             </div>
-            <h2 className="h-section">What our customers say</h2>
+            <h2 className="h-section">
+              {copy?.heading ?? "What our customers say"}
+            </h2>
           </div>
           <a className="link" href="#trustpilot">
             Read all reviews →

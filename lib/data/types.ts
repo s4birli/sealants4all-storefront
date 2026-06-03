@@ -48,6 +48,9 @@ export type Brand = {
   id: string;
   name: BrandName;
   blurb: string;
+  /** Optional logo path (e.g. /brands/sika.svg). When set, BrandGrid shows the
+   *  logo instead of the wordmark. Drop official assets into public/brands. */
+  logo?: string;
 };
 
 export type CategoryIconKey =

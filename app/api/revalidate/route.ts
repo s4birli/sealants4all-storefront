@@ -21,11 +21,19 @@ export const dynamic = "force-dynamic";
 // The cache tags the storefront attaches to its Medusa fetches:
 //   - "catalog"     → every catalogue fetch in lib/medusa.ts (storeFetch).
 //   - "hero-slides" → the hero-slides fetch in lib/hero.ts.
+//   - "blog-posts"  → the blog fetch in lib/blog.ts.
+//   - "site-pages"  → the legal/info page fetch in lib/pages.ts.
 // A POST with no ?tag= busts "catalog" (the default the Medusa product subscriber
-// relies on); ?tag=hero-slides (or a comma list) busts those instead, so a hero
-// edit in the admin can be reflected on-demand too.
+// relies on); ?tag=hero-slides (or a comma list) busts those instead, so a hero,
+// blog or page edit in the admin can be reflected on-demand too.
 const CATALOG_TAG = "catalog";
-const ALLOWED_TAGS = new Set([CATALOG_TAG, "hero-slides"]);
+const ALLOWED_TAGS = new Set([
+  CATALOG_TAG,
+  "hero-slides",
+  "blog-posts",
+  "site-pages",
+  "homepage",
+]);
 
 export async function POST(req: Request): Promise<Response> {
   // Accept the secret from a header (preferred for server-to-server calls) or a

@@ -14,16 +14,16 @@ const ACCENT: Record<string, string> = {
   s4all: "var(--brand-500)",
 };
 
-export function BrandGrid() {
+export function BrandGrid({ copy }: { copy?: Record<string, string> }) {
   return (
     <section className="section" style={{ background: "var(--surface)" }} id="brands">
       <div className="container">
         <div className="section-head">
           <div>
-            <h2 className="h-section">Shop by brand</h2>
+            <h2 className="h-section">{copy?.heading ?? "Shop by brand"}</h2>
             <div className="h-section-sub">
-              Official UK distributor of six leading brands — and our own
-              private-label S4ALL Pro range.
+              {copy?.sub ??
+                "Official UK distributor of six leading brands — and our own private-label S4ALL Pro range."}
             </div>
           </div>
           <a className="link" href="/search">
@@ -41,7 +41,17 @@ export function BrandGrid() {
                 style={{ "--accent": ACCENT[b.id] } as React.CSSProperties}
                 aria-label={`Shop ${b.name} products`}
               >
-                <span className="brand-mark">{b.name}</span>
+                {b.logo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    className="brand-logo-img"
+                    src={b.logo}
+                    alt={`${b.name} logo`}
+                    loading="lazy"
+                  />
+                ) : (
+                  <span className="brand-mark">{b.name}</span>
+                )}
                 <span className="brand-blurb">{b.blurb}</span>
                 <span className={own ? "brand-badge own" : "brand-badge"}>
                   {own ? (

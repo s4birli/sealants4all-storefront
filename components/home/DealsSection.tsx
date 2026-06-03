@@ -8,7 +8,13 @@ import { ProductCard } from "@/components/product/ProductCard";
 
 const HOURS_AHEAD = 62;
 
-export function DealsSection({ products }: { products: Product[] }) {
+export function DealsSection({
+  products,
+  copy,
+}: {
+  products: Product[];
+  copy?: Record<string, string>;
+}) {
   const target = useMemo(() => {
     return Date.now() + HOURS_AHEAD * 3600 * 1000;
   }, []);
@@ -51,9 +57,10 @@ export function DealsSection({ products }: { products: Product[] }) {
             >
               <Tag size={14} strokeWidth={2} /> Limited time
             </div>
-            <h2 className="h-section">Deals of the week</h2>
+            <h2 className="h-section">{copy?.heading ?? "Deals of the week"}</h2>
             <div className="h-section-sub">
-              Six trade-favourite SKUs at clearance pricing. Offer ends in:
+              {copy?.sub ??
+                "Six trade-favourite SKUs at clearance pricing. Offer ends in:"}
             </div>
           </div>
           <div

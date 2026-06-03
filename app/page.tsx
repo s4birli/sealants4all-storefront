@@ -19,8 +19,10 @@ import {
   getProductsBySkus,
 } from "@/lib/catalog";
 import { getHeroSlides } from "@/lib/hero";
+import { getHomepage, type SectionKey } from "@/lib/homepage";
 import { CATEGORIES } from "@/lib/data/categories";
 import { BEST_SKU, DEALS_SKU, NEW_SKU } from "@/lib/curation";
+import { Fragment, type ReactNode } from "react";
 
 export const revalidate = 60;
 
@@ -35,6 +37,7 @@ export default async function HomePage() {
     newArrivalsTail,
     categoryCounts,
     heroSlides,
+    homepage,
   ] = await Promise.all([
     getProductsByCollection("best-sellers"),
     getProductsByCollection("deals"),
@@ -45,6 +48,7 @@ export default async function HomePage() {
     getProductsBySkus(BEST_SKU.slice(0, 4)),
     getCuratedCounts(CATEGORIES.map((c) => c.id)),
     getHeroSlides(),
+    getHomepage(),
   ]);
 
   // Collection membership is the source of truth; fall back to the hardcoded
@@ -54,23 +58,35 @@ export default async function HomePage() {
   const newArrivalsBase = newCollection.length ? newCollection : newFallback;
   const newArrivals = [...newArrivalsBase, ...newArrivalsTail];
 
+  // Each homepage section, keyed so Medusa config can reorder / toggle them and
+  // override their headings (see lib/homepage.ts). Product/category data still
+  // comes from the catalogue; only order, visibility and copy are CMS-driven.
+  const c = homepage.copy;
+  const sectionMap: Record<SectionKey, ReactNode> = {
+    hero: <HeroCarousel slides={heroSlides} />,
+    trust: <TrustStrip />,
+    categories: <CategoryGrid counts={categoryCounts} copy={c.categories} />,
+    brands: <BrandGrid copy={c.brands} />,
+    bestsellers: <BestSellers products={bestSellers} copy={c.bestsellers} />,
+    trade: <TradeBanner copy={c.trade} />,
+    deals: <DealsSection products={deals} copy={c.deals} />,
+    newarrivals: <NewArrivals products={newArrivals} copy={c.newarrivals} />,
+    applications: <Applications copy={c.applications} />,
+    reviews: <Reviews copy={c.reviews} />,
+    whyus: <WhyUs copy={c.whyus} />,
+    newsletter: <Newsletter copy={c.newsletter} />,
+  };
+
   return (
     <>
       <UtilityBar />
       <Header />
       <main id="top">
-        <HeroCarousel slides={heroSlides} />
-        <TrustStrip />
-        <CategoryGrid counts={categoryCounts} />
-        <BrandGrid />
-        <BestSellers products={bestSellers} />
-        <TradeBanner />
-        <DealsSection products={deals} />
-        <NewArrivals products={newArrivals} />
-        <Applications />
-        <Reviews />
-        <WhyUs />
-        <Newsletter />
+        {homepage.sections
+          .filter((s) => s.enabled)
+          .map((s) => (
+            <Fragment key={s.key}>{sectionMap[s.key]}</Fragment>
+          ))}
       </main>
       <Footer />
     </>
